@@ -8,7 +8,7 @@ import {
 
 config();
 
-const main = async () => {
+export const main = async () => {
   // Create an express app
   const app = express();
   // Get port, or default to 3000
