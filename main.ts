@@ -1,10 +1,12 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import express from "express";
 import {
   InteractionType,
   InteractionResponseType,
   verifyKeyMiddleware,
 } from "discord-interactions";
+
+config();
 
 const main = async () => {
   // Create an express app

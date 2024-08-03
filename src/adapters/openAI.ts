@@ -1,8 +1,4 @@
 import { ClientOptions, OpenAI } from "openai";
-import { config } from "dotenv";
-
-config();
-
 export class OpenAIClient {
   private _instance!: OpenAIClient;
   private _ai!: OpenAI;
