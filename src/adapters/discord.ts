@@ -5,14 +5,12 @@ import {
   Routes,
   Interaction,
 } from "discord.js";
-import { config } from "dotenv";
 
 export class DiscordClient {
   private _instance!: DiscordClient;
   private _token!: string;
   private _client!: Client;
   constructor() {
-    config();
     const token = process.env.DISCORD_TOKEN;
     if (!token) {
       throw new Error("DISCORD_TOKEN is not defined");

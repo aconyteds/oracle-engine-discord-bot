@@ -2,11 +2,12 @@
   "name": "oracle-engine-discord-bot",
   "version": "1.0.0",
   "description": "Discord bot for communicating with the AI about a particular Campaign.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev main.ts",
-    "test": "test",
-    "start": ""
+    "test": "jest",
+    "build": "tsc",
+    "start": "functions-framework --target=oracleEngine"
   },
   "keywords": [
     "AI",
@@ -20,6 +21,7 @@
   "author": "AconyteDS",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.2",
     "discord-interactions": "^4.0.0",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
@@ -29,9 +31,12 @@
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
     "@types/node": "^22.1.0",
     "@types/ws": "^8.5.12",
+    "jest": "^29.7.0",
     "nodemon": "^3.1.4",
+    "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4"
