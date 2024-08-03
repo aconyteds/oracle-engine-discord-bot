@@ -33,6 +33,7 @@ jobs:
         run: npm run test:integration
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_PUBLIC_KEY: ${{ secrets.DISCORD_PUBLIC_KEY }}
 
       # Verify Google Cloud Access
       - name: Authenticate with Google Cloud
