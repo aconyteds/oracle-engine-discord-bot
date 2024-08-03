@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev main.ts",
-    "test": "jest",
+    "test": "jest --config jest.config.unit.js",
+    "test:integration": "jest --config jest.config.integration.js",
     "build": "tsc",
     "start": "functions-framework --target=oracleEngine"
   },
