@@ -8,7 +8,7 @@ import {
 
 config();
 
-export const main = async () => {
+export const main = () => {
   // Create an express app
   const app = express();
   // Get port, or default to 3000
@@ -69,9 +69,13 @@ export const main = async () => {
     }
   );
 
-  app.listen(PORT, () => {
-    console.log("Listening on port", PORT);
-  });
+  if (process.env.NODE_ENV !== "test") {
+    app.listen(PORT, () => {
+      console.log("Listening on port", PORT);
+    });
+  }
+
+  return app;
 };
 
 if (process.env.NODE_ENV !== "test") {
