@@ -1,7 +1,12 @@
 import { Request, Response } from "express";
 import * as functions from "@google-cloud/functions-framework";
-import "./main";
+import { main } from "./main";
 
-functions.http("oracleEngine", (req: Request, res: Response) => {
-  res.send("Bot is running.");
-});
+export const oracleEngine = (req: Request, res: Response) => {
+  const app = main();
+  app(req, res);
+};
+
+if (process.env.NODE_ENV !== "test") {
+  functions.http("oracleEngine", oracleEngine);
+}
