@@ -58,7 +58,7 @@ jobs:
           entry_point: "oracleEngine"
           environment_variables: |-
             DISCORD_PUBLIC_KEY=${{ secrets.DISCORD_PUBLIC_KEY }}
-          secret_environment_variables: |-
+          secrets: |-
             DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
@@ -69,7 +69,6 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
-
     env:
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
       DISCORD_PUBLIC_KEY: ${{ secrets.DISCORD_PUBLIC_KEY }}
@@ -105,6 +104,6 @@ jobs:
           runtime: "nodejs22"
           environment_variables: |-
             DISCORD_PUBLIC_KEY=${{ secrets.DISCORD_PUBLIC_KEY }}
-          secret_environment_variables: |-
+          secrets: |-
             DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
