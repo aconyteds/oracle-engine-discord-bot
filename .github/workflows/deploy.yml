@@ -53,6 +53,7 @@ jobs:
         uses: "google-github-actions/deploy-cloud-functions@v3"
         timeout-minutes: 10
         with:
+          source_dir: "dist"
           name: "oracleEngineTest"
           runtime: "nodejs22"
           entry_point: "oracleEngine"
@@ -100,6 +101,7 @@ jobs:
         uses: "google-github-actions/deploy-cloud-functions@v3"
         timeout-minutes: 10
         with:
+          source_dir: "dist"
           name: "oracleEngine"
           runtime: "nodejs22"
           environment_variables: |-
