@@ -59,8 +59,8 @@ jobs:
           environment_variables: |-
             DISCORD_PUBLIC_KEY=${{ secrets.DISCORD_PUBLIC_KEY }}
           secrets: |-
-            DISCORD_TOKEN=projects/381372803287/secrets/DISCORD_TOKEN/versions/1
-            OPENAI_API_KEY=projects/381372803287/secrets/OPENAI_API_KEY/versions/1
+            DISCORD_TOKEN=projects/381372803287/secrets/DISCORD_TOKEN:latest
+            OPENAI_API_KEY=projects/381372803287/secrets/OPENAI_API_KEY:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -105,5 +105,5 @@ jobs:
           environment_variables: |-
             DISCORD_PUBLIC_KEY=${{ secrets.DISCORD_PUBLIC_KEY }}
           secrets: |-
-            DISCORD_TOKEN=projects/381372803287/secrets/DISCORD_TOKEN/versions/1
-            OPENAI_API_KEY=projects/381372803287/secrets/OPENAI_API_KEY/versions/1
+            DISCORD_TOKEN=projects/381372803287/secrets/DISCORD_TOKEN:latest
+            OPENAI_API_KEY=projects/381372803287/secrets/OPENAI_API_KEY:latest
