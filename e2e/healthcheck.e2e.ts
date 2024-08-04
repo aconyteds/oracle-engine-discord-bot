@@ -1,6 +1,6 @@
 import request from "supertest";
 import { createServer, Server } from "http";
-import { main } from "../main";
+import { main } from "../src/main";
 import * as dotenv from "dotenv";
 
 dotenv.config();
