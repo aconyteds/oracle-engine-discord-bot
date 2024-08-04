@@ -13,7 +13,8 @@ export class DiscordClient {
   constructor() {
     const token = process.env.DISCORD_TOKEN;
     if (!token) {
-      throw new Error("DISCORD_TOKEN is not defined");
+      console.error("DISCORD_TOKEN is not defined");
+      return;
     }
     this._token = token;
     const client = new Client({

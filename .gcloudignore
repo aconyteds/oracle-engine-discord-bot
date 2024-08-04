@@ -12,6 +12,12 @@
 # below:
 .git
 .gitignore
+.github
+.env
+e2e
+jest*
+LICENSE
+README*
 
 node_modules
 #!include:.gitignore
