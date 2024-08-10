@@ -1,4 +1,5 @@
 import { Client, Message } from "discord.js";
+import { OpenAIClient } from "../adapters/openAI";
 
 type GenerateMessageInput = {
   client: Client;
@@ -6,16 +7,43 @@ type GenerateMessageInput = {
 };
 
 const generateMessage = async ({ client, message }: GenerateMessageInput) => {
-  const { author, content } = message;
+  const ai = OpenAIClient.Instance;
 
-  const { username, discriminator } = author;
+  const { reference, content, id } = message;
 
-  console.log(`${username}#${discriminator}: ${content}`);
+  const originalMessageId = reference?.messageId;
 
-  // Send a response to the same channel
-  await message.channel.send({
-    content: `You said: ${content}`,
+  // parse the mention data from the message
+  const prompt = content.replace(/<@!?\d+>/, "").trim();
+
+  const thinkingMessage = await message.reply({
+    content: "🤔 Let me think about that...",
   });
+
+  try {
+    let threadId;
+    if (originalMessageId) {
+      threadId = ai.getThread(originalMessageId);
+    }
+    if (!threadId) {
+      // Create a new thread for the assistant
+      threadId = await ai.createThread();
+    }
+    ai.storeThread(id, threadId);
+
+    // Generate a response from the AI
+    const aiResponse = await ai.generateMessage(threadId, prompt);
+
+    // Update the "thinking" message with the AI's response
+    await thinkingMessage.edit({
+      content: aiResponse,
+    });
+  } catch (error) {
+    console.error("Error generating AI response:", error);
+    await thinkingMessage.edit({
+      content: "Sorry, I couldn't come up with a response.",
+    });
+  }
 };
 
 export default generateMessage;
