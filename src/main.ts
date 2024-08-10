@@ -5,6 +5,7 @@ import {
   InteractionResponseType,
   verifyKeyMiddleware,
 } from "discord-interactions";
+import { initializeBot } from "./bot";
 
 config();
 
@@ -16,6 +17,9 @@ export const main = (): Express => {
     console.error("DISCORD_PUBLIC_KEY is not defined");
     process.exit(1);
   }
+
+  // Initialize the bot
+  initializeBot();
 
   app.get("/healthCheck", (req, res) => {
     res.status(200).send(true);
