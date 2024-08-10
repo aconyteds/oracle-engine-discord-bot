@@ -4,7 +4,7 @@
   "description": "Discord bot for communicating with the AI about a particular Campaign.",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node-dev src/main.ts",
+    "dev": "ts-node-dev src/index.ts",
     "test": "jest --config jest.config.unit.js",
     "test:integration": "jest --config jest.config.integration.js",
     "build": "tsc",
