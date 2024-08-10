@@ -8,7 +8,7 @@
     "test": "jest --config jest.config.unit.js",
     "test:integration": "jest --config jest.config.integration.js",
     "build": "tsc",
-    "start": "functions-framework --target=oracleEngine"
+    "start": "node dist/index.js"
   },
   "keywords": [
     "AI",
@@ -22,7 +22,6 @@
   "author": "AconyteDS",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@google-cloud/functions-framework": "^3.4.2",
     "discord-interactions": "^4.0.0",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
