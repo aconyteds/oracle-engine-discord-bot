@@ -3,8 +3,13 @@ export class OpenAIClient {
   private _instance!: OpenAIClient;
   private _ai!: OpenAI;
   constructor() {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      console.error("OPENAI_API_KEY is not defined");
+      return;
+    }
     const clientOptions: ClientOptions = {
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey,
     };
     this._ai = new OpenAI(clientOptions);
   }

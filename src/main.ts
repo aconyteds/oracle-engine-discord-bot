@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import express from "express";
+import express, { Express } from "express";
 import {
   InteractionType,
   InteractionResponseType,
@@ -8,7 +8,7 @@ import {
 
 config();
 
-export const main = () => {
+export const main = (): Express => {
   // Create an express app
   const app = express();
   // Get port, or default to 3000
@@ -69,15 +69,5 @@ export const main = () => {
     }
   );
 
-  if (process.env.NODE_ENV !== "test") {
-    app.listen(PORT, () => {
-      console.log("Listening on port", PORT);
-    });
-  }
-
   return app;
 };
-
-if (process.env.NODE_ENV !== "test") {
-  main();
-}
