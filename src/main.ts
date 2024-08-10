@@ -11,8 +11,6 @@ config();
 export const main = (): Express => {
   // Create an express app
   const app = express();
-  // Get port, or default to 3000
-  const PORT = process.env.PORT || 3000;
   const publicKey = process.env.DISCORD_PUBLIC_KEY;
   if (!publicKey) {
     console.error("DISCORD_PUBLIC_KEY is not defined");
