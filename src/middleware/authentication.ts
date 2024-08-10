@@ -3,8 +3,6 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 
 const LOGIN_TOKENS = new Set<string>();
-const admin = process.env.ADMIN_USERNAME;
-const adminpw = process.env.ADMIN_PASSWORD;
 
 // Function to generate a secure token
 const generateToken = (): string => {
@@ -66,6 +64,11 @@ const authenticateToken = async (
 
 const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
+  const admin = process.env.ADMIN_USER;
+  const adminpw = process.env.ADMIN_PASSWORD;
+  if (!admin || !adminpw) {
+    return res.status(500).json({ error: "Admin credentials not set" });
+  }
 
   // In a real application, you would validate the username and password against a database
   // For this example, we'll use a hardcoded check
