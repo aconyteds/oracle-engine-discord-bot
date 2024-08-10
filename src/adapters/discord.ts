@@ -9,6 +9,7 @@ import {
   GatewayHelloData,
   GatewayReadyDispatchData,
   GatewayMessageCreateDispatchData,
+  GatewayIntentBits,
 } from "discord.js";
 import ws from "ws";
 import Axios from "axios";
@@ -33,19 +34,7 @@ export class DiscordClient {
   private constructor() {
     this._token = process.env.DISCORD_TOKEN || "";
     this._applicationId = process.env.DISCORD_APPLICATION_ID || "";
-    // const client = new Client({
-    //   intents: [
-    //     GatewayIntentBits.Guilds,
-    //     GatewayIntentBits.GuildMessages,
-    //     GatewayIntentBits.MessageContent,
-    //     GatewayIntentBits.DirectMessages,
-    //     GatewayIntentBits.GuildMessageReactions,
-    //   ],
-    // });
-    // this._client = client;
-    // client.once("ready", this.heandleReady);
-    // client.on("interactionCreate", this.handleInteractionCreate);
-    // client.login(this._token);
+    this._intents = parseInt(process.env.DISCORD_PERMISSION_INTENT || "0", 10);
   }
 
   // Singleton pattern, returns an instance of DiscordClient
@@ -142,11 +131,12 @@ export class DiscordClient {
         this._connectionEstablished = true;
         this.initializeHeartbeat();
         if (DISCORD_GATEWAY_URL === this.gatewayUrl) {
+          console.log(this.Intents);
           const payload: GatewayIdentify = {
             op: GatewayOpcodes.Identify,
             d: {
               token: this.Token,
-              intents: 513, // this.Intents,
+              intents: this.Intents,
               properties: {
                 os: "windows",
                 browser: "oracle-engine",
@@ -186,10 +176,14 @@ export class DiscordClient {
         if (author.id === this._applicationId) {
           return;
         }
-        const { username, discriminator } = author;
+        const areYouTalkingToMe = mentions.some(
+          ({ id }) => id === this._applicationId
+        );
+        if (areYouTalkingToMe) {
+          const { username, discriminator } = author;
 
-        if (mentions && mentions.some(({ id }) => id === this._applicationId)) {
           console.log(`${username}#${discriminator}: ${content}`);
+          // TODO:: Add the Request to call the OpenAI API
         }
       // case "INTERACTION_CREATE":
       //   this.handleInteractionCreate(d);
