@@ -7,7 +7,6 @@ WORKDIR /app
 # Copy over node_modules and dist from the build
 COPY node_modules ./node_modules
 COPY dist ./dist
-COPY package.json .
 
 # Expose the port the app runs on
 EXPOSE 3000
