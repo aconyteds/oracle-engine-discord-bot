@@ -11,6 +11,9 @@ type CreateThreadPayload = {
   runId: string;
 };
 
+/**
+ * Represents a client for interacting with the OpenAI API.
+ */
 export class OpenAIClient {
   public static _instance: OpenAIClient;
   private _ai!: OpenAI;
@@ -36,15 +39,31 @@ export class OpenAIClient {
     return OpenAIClient._instance;
   }
 
+  /**
+   * Stores the mapping between a Discord message ID and an OpenAI thread ID.
+   *
+   * @param discordMessageId - The ID of the Discord message.
+   * @param openAIThreadId - The ID of the OpenAI thread.
+   */
   public storeThread = (discordMessageId: string, openAIThreadId: string) => {
     THREAD_LOOKUP.set(discordMessageId, openAIThreadId);
   };
 
+  /**
+   * Retrieves the thread associated with the given Discord message ID.
+   *
+   * @param discordMessageId - The ID of the Discord message.
+   * @returns The thread associated with the given Discord message ID.
+   */
   public getThread = (discordMessageId: string) => {
     return THREAD_LOOKUP.get(discordMessageId);
   };
 
-  // List all of the assistants tied to the API key
+  /**
+   * Retrieves a list of assistants associated with the API key.
+   *
+   * @returns {Promise<AssistantsPage>} A promise that resolves to an AssistantsPage object containing the list of assistants.
+   */
   public listAssistants = async (): Promise<AssistantsPage> => {
     console.log("Listing assistants associated with the API key");
     const response = await this._ai.beta.assistants.list({
@@ -54,7 +73,12 @@ export class OpenAIClient {
     return response;
   };
 
-  // Find an existing thread by ID
+  /**
+   * Finds a thread by its ID.
+   *
+   * @param threadId - The ID of the thread to find.
+   * @returns A promise that resolves to the retrieved thread.
+   */
   public findThread = async (
     threadId: string
   ): Promise<OpenAI.Beta.Threads.Thread> => {
@@ -63,7 +87,12 @@ export class OpenAIClient {
     return response;
   };
 
-  // List all runs for a Thread
+  /**
+   * Retrieves a list of runs for a given thread.
+   *
+   * @param threadId - The ID of the thread.
+   * @returns A Promise that resolves to a RunsPage object containing the list of runs.
+   */
   public listRuns = async (
     threadId: string
   ): Promise<OpenAI.Beta.Threads.Runs.RunsPage> => {
@@ -73,16 +102,19 @@ export class OpenAIClient {
   };
 
   /**
-   * This method can be used to create a new thread.
-   *
-   * @param prompt A Text prompt to create a new thread with.
-   * @returns ThreadID that can be used to lookup the response from the assistant.
+   * Creates a thread.
+   * @returns The ID of the created thread.
    */
   public createThread = async (): Promise<string> => {
     const response = await this._ai.beta.threads.create();
     return response.id;
   };
 
+  /**
+   * Creates and runs a thread in the OpenAI assistant.
+   * @param prompt - The prompt for the thread.
+   * @returns A promise that resolves to a CreateThreadPayload object containing the thread ID and run ID.
+   */
   public createAndRunThread = async (
     prompt: string
   ): Promise<CreateThreadPayload> => {
@@ -103,7 +135,13 @@ export class OpenAIClient {
     };
   };
 
-  // Add a message to a thread
+  /**
+   * Adds a message to a thread.
+   *
+   * @param threadId - The ID of the thread.
+   * @param prompt - The content of the message.
+   * @returns A promise that resolves when the message is added.
+   */
   public addMessage = async (
     threadId: string,
     prompt: string
@@ -114,7 +152,13 @@ export class OpenAIClient {
     });
   };
 
-  // Generate a message for a thread
+  /**
+   * Generates a message using the OpenAI API.
+   *
+   * @param threadId - The ID of the thread.
+   * @param prompt - The optional prompt for the message.
+   * @returns A Promise that resolves to the generated message.
+   */
   public generateMessage = async (
     threadId: string,
     prompt?: string
