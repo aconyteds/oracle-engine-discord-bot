@@ -6,6 +6,7 @@ import {
   verifyKeyMiddleware,
 } from "discord-interactions";
 import { initializeBot } from "./bot";
+import { OpenAIClient } from "./adapters/openAI";
 
 config();
 
@@ -23,6 +24,26 @@ export const main = (): Express => {
 
   app.get("/healthCheck", (req, res) => {
     res.status(200).send(true);
+  });
+
+  app.get("/assistants", async (req, res) => {
+    const ai = OpenAIClient.Instance;
+    const threads = await ai.listAssistants();
+    res.status(200).send(threads);
+  });
+
+  app.get("/threads/:threadId", async (req, res) => {
+    const ai = OpenAIClient.Instance;
+    const threadId = req.params.threadId;
+    const thread = await ai.findThread(threadId);
+    res.status(200).send(thread);
+  });
+
+  app.get("/threads/:threadId/runs", async (req, res) => {
+    const ai = OpenAIClient.Instance;
+    const threadId = req.params.threadId;
+    const runs = await ai.listRuns(threadId);
+    res.status(200).send(runs);
   });
 
   /**
