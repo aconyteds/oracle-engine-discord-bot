@@ -30,22 +30,20 @@ export const main = (): Express => {
   // Must login to use any other methods
   app.post("/login", login);
 
-  app.use(authenticateToken);
-
-  app.get("/assistants", async (req, res) => {
+  app.get("/assistants", authenticateToken, async (req, res) => {
     const ai = OpenAIClient.Instance;
     const threads = await ai.listAssistants();
     res.status(200).send(threads);
   });
 
-  app.get("/threads/:threadId", async (req, res) => {
+  app.get("/threads/:threadId", authenticateToken, async (req, res) => {
     const ai = OpenAIClient.Instance;
     const threadId = req.params.threadId;
     const thread = await ai.findThread(threadId);
     res.status(200).send(thread);
   });
 
-  app.get("/threads/:threadId/runs", async (req, res) => {
+  app.get("/threads/:threadId/runs", authenticateToken, async (req, res) => {
     const ai = OpenAIClient.Instance;
     const threadId = req.params.threadId;
     const runs = await ai.listRuns(threadId);
