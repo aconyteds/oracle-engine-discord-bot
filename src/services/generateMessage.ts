@@ -1,5 +1,6 @@
 import { Client, Message } from "discord.js";
 import { OpenAIClient } from "../adapters/openAI";
+import { DBClient } from "../adapters/MongoDB";
 
 type GenerateMessageInput = {
   client: Client;
@@ -8,11 +9,11 @@ type GenerateMessageInput = {
 
 const generateMessage = async ({ client, message }: GenerateMessageInput) => {
   const ai = OpenAIClient.Instance;
+  const db = DBClient.Instance;
 
-  const { reference, content, id } = message;
+  const { reference, content } = message;
 
   const originalMessageId = reference?.messageId;
-
   // parse the mention data from the message
   const prompt = content.replace(/<@!?\d+>/, "").trim();
 
@@ -20,29 +21,44 @@ const generateMessage = async ({ client, message }: GenerateMessageInput) => {
     content: "🤔 Let me think about that...",
   });
 
+  let lastId = thinkingMessage.id;
+  let threadId;
+
   try {
-    let threadId;
     if (originalMessageId) {
-      threadId = ai.getThread(originalMessageId);
+      try {
+        threadId = await db.getMessageThreadID(originalMessageId);
+      } catch (error) {
+        console.warn("unable to get thread ID from DB:", error);
+      }
     }
     if (!threadId) {
       // Create a new thread for the assistant
       threadId = await ai.createThread();
     }
-    ai.storeThread(id, threadId);
 
     // Generate a response from the AI
     const aiResponse = await ai.generateMessage(threadId, prompt);
 
     // Update the "thinking" message with the AI's response
-    await thinkingMessage.edit({
+    const finalMessage = await thinkingMessage.edit({
       content: aiResponse,
     });
+    lastId = finalMessage.id;
   } catch (error) {
     console.error("Error generating AI response:", error);
-    await thinkingMessage.edit({
+    const errorUpdate = await thinkingMessage.edit({
       content: "Sorry, I couldn't come up with a response.",
     });
+    lastId = errorUpdate.id;
+  }
+  if (!threadId) {
+    return;
+  }
+  try {
+    await db.storeThread(originalMessageId, lastId, threadId);
+  } catch (error) {
+    console.error("Error storing thread in DB:", error);
   }
 };
 
