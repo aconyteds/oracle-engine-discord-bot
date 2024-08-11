@@ -56,18 +56,32 @@ export class DBClient {
           },
         }
       );
-
     return existingThread?.openAIThreadId;
   };
 
   public storeThread = async (
+    referencedMessageId: string | undefined,
     discordMessageId: string,
     openAIThreadId: string
   ): Promise<WithId<MessageThread> | null> => {
+    // Find the previous item based on the referenced message ID
+    const prevItem = await this._db
+      .collection<MessageThread>("MessageThread")
+      .findOne({
+        discordMessageId: referencedMessageId,
+      });
+
+    // Use the previous item's discordMessageId if it exists; otherwise, use the current discordMessageId
+    const targetDiscordMessageId =
+      prevItem?.discordMessageId || discordMessageId;
+
+    // Perform the upsert operation
     const result = await this._db
       .collection<MessageThread>("MessageThread")
       .findOneAndUpdate(
-        { discordMessageId },
+        {
+          discordMessageId: targetDiscordMessageId,
+        },
         {
           $set: {
             lastUpdated: new Date(),
@@ -76,19 +90,16 @@ export class DBClient {
             messageCount: 1,
           },
           $setOnInsert: {
+            discordMessageId: targetDiscordMessageId,
             openAIThreadId,
-            discordMessageId,
             dateCreated: new Date(),
           },
         },
         {
           upsert: true, // Insert a new document if none exists
-          projection: { _id: 0 }, // Exclude the _id field from the returned document
           returnDocument: "after", // Return the document after the update is applied
         }
       );
-
-    // The `result.value` will contain the document after the operation is applied
     return result;
   };
 }

@@ -78,7 +78,16 @@ export class DiscordClient {
       message.channel.send("Pong!");
       return;
     }
-    const { author, mentions } = message;
+    const { author, mentions, channelId } = message;
+    if (!process.env.DISCORD_CHANNEL_ID) {
+      console.log("No channel ID provided, nothing to monitor.");
+      return;
+    }
+    const channelList = process.env.DISCORD_CHANNEL_ID.split(",");
+    if (!channelList.includes(channelId)) {
+      console.log(`Bot not listening to this channel.${channelId}`);
+      return;
+    }
 
     // Check if the message author is the bot itself
     if (author.id === this._applicationId) {
