@@ -1,10 +1,5 @@
 import { ClientOptions, OpenAI } from "openai";
 import { AssistantsPage } from "openai/resources/beta/assistants";
-import { Text } from "openai/resources/beta/threads/messages";
-
-// TODO:: Switch to a DB for storing thread information so that it persists across restarts
-// discord.originalMessageId -> OpenAI.threadId
-const THREAD_LOOKUP = new Map<string, string>();
 
 type CreateThreadPayload = {
   threadId: string;
@@ -38,26 +33,6 @@ export class OpenAIClient {
     }
     return OpenAIClient._instance;
   }
-
-  /**
-   * Stores the mapping between a Discord message ID and an OpenAI thread ID.
-   *
-   * @param discordMessageId - The ID of the Discord message.
-   * @param openAIThreadId - The ID of the OpenAI thread.
-   */
-  public storeThread = (discordMessageId: string, openAIThreadId: string) => {
-    THREAD_LOOKUP.set(discordMessageId, openAIThreadId);
-  };
-
-  /**
-   * Retrieves the thread associated with the given Discord message ID.
-   *
-   * @param discordMessageId - The ID of the Discord message.
-   * @returns The thread associated with the given Discord message ID.
-   */
-  public getThread = (discordMessageId: string) => {
-    return THREAD_LOOKUP.get(discordMessageId);
-  };
 
   /**
    * Retrieves a list of assistants associated with the API key.

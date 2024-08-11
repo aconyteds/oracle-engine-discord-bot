@@ -1,5 +1,6 @@
 import { Client, Message } from "discord.js";
 import { OpenAIClient } from "../adapters/openAI";
+import { DBClient } from "../adapters/MongoDB";
 
 type GenerateMessageInput = {
   client: Client;
@@ -8,6 +9,7 @@ type GenerateMessageInput = {
 
 const generateMessage = async ({ client, message }: GenerateMessageInput) => {
   const ai = OpenAIClient.Instance;
+  const db = DBClient.Instance;
 
   const { reference, content, id } = message;
 
@@ -23,13 +25,13 @@ const generateMessage = async ({ client, message }: GenerateMessageInput) => {
   try {
     let threadId;
     if (originalMessageId) {
-      threadId = ai.getThread(originalMessageId);
+      threadId = await db.getMessageThreadID(originalMessageId);
     }
     if (!threadId) {
       // Create a new thread for the assistant
       threadId = await ai.createThread();
+      await db.storeThread(id, threadId);
     }
-    ai.storeThread(id, threadId);
 
     // Generate a response from the AI
     const aiResponse = await ai.generateMessage(threadId, prompt);
