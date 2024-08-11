@@ -31,14 +31,13 @@ export class DBClient {
     }
     return DBClient._instance;
   }
-
   private connectToMongoDB = async (mongoUri: string) => {
     try {
       const client = new MongoClient(mongoUri);
       await client.connect();
-      const db = client.db(""); // Use the default database specified in the URI
+      const db = client.db("DiscordBot"); // Use the default database specified in the URI
       this._db = db;
-      console.log("Connected to MongoDB Atlas");
+      console.log("Connected to MongoDB");
     } catch (error) {
       console.error("Failed to connect to MongoDB:", error);
       process.exit(1);
