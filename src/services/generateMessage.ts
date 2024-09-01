@@ -20,8 +20,6 @@ const generateMessage = async ({ client, message }: GenerateMessageInput) => {
   const thinkingMessage = await message.reply({
     content: "🤔 Let me think about that...",
   });
-
-  let lastId = thinkingMessage.id;
   let threadId;
 
   try {
@@ -36,6 +34,10 @@ const generateMessage = async ({ client, message }: GenerateMessageInput) => {
       // Create a new thread for the assistant
       threadId = await ai.createThread();
     }
+    // Store the Original Message
+    await db.storeThread(message, threadId);
+    // Store the "thinking" message
+    await db.storeThread(thinkingMessage, threadId);
 
     // Generate a response from the AI
     const aiResponse = await ai.generateMessage(threadId, prompt);
@@ -44,21 +46,14 @@ const generateMessage = async ({ client, message }: GenerateMessageInput) => {
     const finalMessage = await thinkingMessage.edit({
       content: aiResponse,
     });
-    lastId = finalMessage.id;
+    // Store the Final Message ID
+    await db.storeThread(finalMessage, threadId);
   } catch (error) {
     console.error("Error generating AI response:", error);
     const errorUpdate = await thinkingMessage.edit({
       content: "Sorry, I couldn't come up with a response.",
     });
-    lastId = errorUpdate.id;
-  }
-  if (!threadId) {
-    return;
-  }
-  try {
-    await db.storeThread(originalMessageId, lastId, threadId);
-  } catch (error) {
-    console.error("Error storing thread in DB:", error);
+    await db.storeThread(errorUpdate, threadId);
   }
 };
 

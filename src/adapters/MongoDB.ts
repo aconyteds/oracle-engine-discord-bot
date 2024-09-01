@@ -1,28 +1,28 @@
-import { MongoClient, Db, UUID, WithId } from "mongodb";
 import { config } from "dotenv";
+import { PrismaClient } from "@prisma/client";
+import { Message } from "discord.js";
 
 config();
 
-type MessageThread = {
-  id: UUID;
+export type StoreThreadInput = {
   discordMessageId: string;
   openAIThreadId: string;
-  messageCount: number;
-  dateCreated: Date;
-  lastUpdated: Date;
+  discordChannelId: string;
+  discordUserId: string;
+  discordGuildId: string | null;
 };
 
 export class DBClient {
   public static _instance: DBClient;
-  private _db!: Db;
+  private _db!: PrismaClient;
 
   constructor() {
-    const mongoUri = process.env.MONGO_URI || "";
-    if (!mongoUri) {
-      console.error("MONGO_URI is not defined");
+    if (!process.env.DATABASE_URL) {
+      console.error("DATABASE_URL is not defined");
       process.exit(1);
     }
-    this.connectToMongoDB(mongoUri);
+    const client = new PrismaClient();
+    this._db = client;
   }
 
   public static get Instance(): DBClient {
@@ -31,74 +31,36 @@ export class DBClient {
     }
     return DBClient._instance;
   }
-  private connectToMongoDB = async (mongoUri: string) => {
-    try {
-      const client = new MongoClient(mongoUri);
-      await client.connect();
-      const db = client.db("DiscordBot"); // Use the default database specified in the URI
-      this._db = db;
-      console.log("Connected to MongoDB");
-    } catch (error) {
-      console.error("Failed to connect to MongoDB:", error);
-      process.exit(1);
-    }
-  };
 
   public getMessageThreadID = async (discordMessageId: string) => {
-    const existingThread = await this._db
-      .collection<MessageThread>("MessageThread")
-      .findOne(
-        { discordMessageId },
-        {
-          projection: {
-            openAIThreadId: 1,
-          },
-        }
-      );
+    const existingThread = await this._db.messageThread.findFirst({
+      where: {
+        discordMessageId,
+      },
+      select: {
+        openAIThreadId: true,
+      },
+    });
     return existingThread?.openAIThreadId;
   };
 
   public storeThread = async (
-    referencedMessageId: string | undefined,
-    discordMessageId: string,
-    openAIThreadId: string
-  ): Promise<WithId<MessageThread> | null> => {
-    // Find the previous item based on the referenced message ID
-    const prevItem = await this._db
-      .collection<MessageThread>("MessageThread")
-      .findOne({
-        discordMessageId: referencedMessageId,
+    data: Message,
+    openAIThreadId?: string
+  ): Promise<void> => {
+    try {
+      await this._db.messageThread.create({
+        data: {
+          openAIThreadId: openAIThreadId || "",
+          discordMessageId: data.id,
+          discordChannelId: data.channelId,
+          discordUserId: data.author.id,
+          discordGuildId: data.guildId,
+          discordUsername: data.author.displayName,
+        },
       });
-
-    // Use the previous item's discordMessageId if it exists; otherwise, use the current discordMessageId
-    const targetDiscordMessageId =
-      prevItem?.discordMessageId || discordMessageId;
-
-    // Perform the upsert operation
-    const result = await this._db
-      .collection<MessageThread>("MessageThread")
-      .findOneAndUpdate(
-        {
-          discordMessageId: targetDiscordMessageId,
-        },
-        {
-          $set: {
-            lastUpdated: new Date(),
-          },
-          $inc: {
-            messageCount: 1,
-          },
-          $setOnInsert: {
-            discordMessageId: targetDiscordMessageId,
-            openAIThreadId,
-            dateCreated: new Date(),
-          },
-        },
-        {
-          upsert: true, // Insert a new document if none exists
-          returnDocument: "after", // Return the document after the update is applied
-        }
-      );
-    return result;
+    } catch (error) {
+      console.error("Error storing thread in DB:", error);
+    }
   };
 }
