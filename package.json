@@ -22,6 +22,7 @@
   "author": "AconyteDS",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
+    "@prisma/client": "^5.19.0",
     "axios": "^1.7.3",
     "bcrypt": "^5.1.1",
     "discord-interactions": "^4.0.0",
@@ -44,6 +45,7 @@
     "jest": "^29.7.0",
     "jest-environment-node": "^29.7.0",
     "nodemon": "^3.1.4",
+    "prisma": "^5.19.0",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",

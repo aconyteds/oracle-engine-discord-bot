@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model MessageThread {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  dateCreated      DateTime @default(now()) @db.Date
+  discordMessageId String
+  discordChannelId String
+  discordGuildId   String?
+  discordUserId    String
+  discordUsername  String
+  openAIThreadId   String
+
+  @@index([discordMessageId], name: "discordMessageId")
+}
+
+model ServerConfigurations {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  discordGuildId   String
+  discordChannelId String
+  assistantId      String // The OpenAI assistant ID to use for this channel
+  active           Boolean
+  dateCreated      DateTime @default(now()) @db.Date
+  dateUpdated      DateTime @updatedAt @db.Date
+}
