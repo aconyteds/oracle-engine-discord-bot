@@ -45,11 +45,18 @@ const generateMessage = async ({
     await db.storeThread(thinkingMessage, threadId);
 
     // Generate a response from the AI
-    const aiResponse = await ai.generateMessage(threadId, assistantId, prompt);
+    let aiResponse = await ai.generateMessage(threadId, assistantId, prompt);
 
+    // Discord message length limit is 2000 characters, force the string length
+    const stringLength = aiResponse.length;
+    if (stringLength > 2000) {
+      aiResponse =
+        aiResponse.substring(0, 1963) +
+        "...\n\n There I go droning on again...";
+    }
     // Update the "thinking" message with the AI's response
     const finalMessage = await thinkingMessage.edit({
-      content: aiResponse,
+      content: aiResponse.substring(0, 2000),
     });
     // Store the Final Message ID
     await db.storeThread(finalMessage, threadId);
