@@ -5,9 +5,14 @@ import { DBClient } from "../adapters/MongoDB";
 type GenerateMessageInput = {
   client: Client;
   message: Message;
+  assistantId: string;
 };
 
-const generateMessage = async ({ client, message }: GenerateMessageInput) => {
+const generateMessage = async ({
+  client,
+  message,
+  assistantId,
+}: GenerateMessageInput) => {
   const ai = OpenAIClient.Instance;
   const db = DBClient.Instance;
 
@@ -40,7 +45,7 @@ const generateMessage = async ({ client, message }: GenerateMessageInput) => {
     await db.storeThread(thinkingMessage, threadId);
 
     // Generate a response from the AI
-    const aiResponse = await ai.generateMessage(threadId, prompt);
+    const aiResponse = await ai.generateMessage(threadId, assistantId, prompt);
 
     // Update the "thinking" message with the AI's response
     const finalMessage = await thinkingMessage.edit({

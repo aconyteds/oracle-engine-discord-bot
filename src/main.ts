@@ -2,7 +2,7 @@ import { config } from "dotenv";
 import express, { Express } from "express";
 import { initializeBot } from "./bot";
 import { OpenAIClient } from "./adapters/openAI";
-import { authenticateToken, login } from "./middleware/authentication";
+import { authenticateToken } from "./middleware/authentication";
 
 config();
 
@@ -26,9 +26,6 @@ export const main = (): Express => {
   app.get("/healthCheck", (req, res) => {
     res.status(200).send(true);
   });
-
-  // Must login to use any other methods
-  app.post("/login", login);
 
   app.get("/assistants", authenticateToken, async (req, res) => {
     const ai = OpenAIClient.Instance;
