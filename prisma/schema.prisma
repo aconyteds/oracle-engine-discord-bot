@@ -22,8 +22,9 @@ model MessageThread {
 
 model ServerConfigurations {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  nickname         String
   discordGuildId   String
-  discordChannelId String
+  discordChannelId String   @unique
   assistantId      String // The OpenAI assistant ID to use for this channel
   active           Boolean
   dateCreated      DateTime @default(now()) @db.Date

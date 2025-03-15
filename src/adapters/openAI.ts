@@ -12,10 +12,8 @@ type CreateThreadPayload = {
 export class OpenAIClient {
   public static _instance: OpenAIClient;
   private _ai!: OpenAI;
-  private _assistantId!: string;
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
-    this._assistantId = process.env.OPENAI_ASSISTANT_ID || "";
     if (!apiKey) {
       console.error("OPENAI_API_KEY is not defined");
       return;
@@ -91,10 +89,11 @@ export class OpenAIClient {
    * @returns A promise that resolves to a CreateThreadPayload object containing the thread ID and run ID.
    */
   public createAndRunThread = async (
-    prompt: string
+    prompt: string,
+    assistant_id: string
   ): Promise<CreateThreadPayload> => {
     const response = await this._ai.beta.threads.createAndRun({
-      assistant_id: this._assistantId,
+      assistant_id,
       thread: {
         messages: [
           {
@@ -136,11 +135,12 @@ export class OpenAIClient {
    */
   public generateMessage = async (
     threadId: string,
+    assistant_id: string,
     prompt?: string
   ): Promise<string> => {
     let response = "";
     const run = await this._ai.beta.threads.runs.createAndPoll(threadId, {
-      assistant_id: this._assistantId,
+      assistant_id,
       stream: false,
       additional_messages: prompt ? [{ role: "user", content: prompt }] : [],
     });

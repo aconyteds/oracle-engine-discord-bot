@@ -1,15 +1,21 @@
 import { Client, Message, GatewayIntentBits } from "discord.js";
 import { generateMessage } from "../services";
+import { PrismaClient, ServerConfigurations } from "@prisma/client";
+import NodeCache from "node-cache";
 
 export class DiscordClient {
   public static _instance: DiscordClient;
   private _token!: string;
   private _applicationId!: string;
   private _client!: Client;
+  private _prisma: PrismaClient;
+  private _cache: NodeCache;
 
   private constructor() {
     this._token = process.env.DISCORD_TOKEN || "";
     this._applicationId = process.env.DISCORD_APPLICATION_ID || "";
+    this._prisma = new PrismaClient();
+    this._cache = new NodeCache({ stdTTL: 86400 }); // Cache for 24 hours
 
     this._client = new Client({
       ws: {
@@ -73,21 +79,12 @@ export class DiscordClient {
   };
 
   // This is the most important method in this class. It handles all incoming messages from the gateway, and routes them to the proper handlers.
-  private handleMessage = (message: Message) => {
+  private handleMessage = async (message: Message) => {
     if (message.content === "!ping") {
       message.channel.send("Pong!");
       return;
     }
-    const { author, mentions, channelId } = message;
-    if (!process.env.DISCORD_CHANNEL_ID) {
-      console.log("No channel ID provided, nothing to monitor.");
-      return;
-    }
-    const channelList = process.env.DISCORD_CHANNEL_ID.split(",");
-    if (!channelList.includes(channelId)) {
-      console.log(`Bot not listening to this channel.${channelId}`);
-      return;
-    }
+    const { author, mentions, channelId, guild, guildId } = message;
 
     // Check if the message author is the bot itself
     if (author.id === this._applicationId) {
@@ -100,9 +97,48 @@ export class DiscordClient {
     if (!areYouTalkingToMe) {
       return;
     }
+
+    // Check cache for server configuration
+    let serverConfig: ServerConfigurations | undefined | false =
+      this._cache.get(channelId);
+    if (serverConfig === undefined) {
+      try {
+        serverConfig =
+          await this._prisma.serverConfigurations.findUniqueOrThrow({
+            where: { discordChannelId: channelId },
+          });
+
+        if (
+          !serverConfig ||
+          !serverConfig.active ||
+          serverConfig.discordGuildId !== guildId
+        ) {
+          this._cache.set(channelId, false);
+          console.log(
+            `Bot not active or not configured for this channel: ${channelId}`
+          );
+          return;
+        }
+
+        this._cache.set(channelId, serverConfig);
+      } catch (error) {
+        console.error(
+          `Error fetching server configuration for channel: ${channelId}`,
+          error
+        );
+        console.warn(
+          `Channel: ${channelId} is not configured or active but a message was sent. This channel belongs to the server: ${guild?.name}`
+        );
+      }
+    }
+    if (!serverConfig) {
+      return;
+    }
+
     generateMessage({
       client: this._client,
       message,
+      assistantId: serverConfig.assistantId,
     });
   };
 }
