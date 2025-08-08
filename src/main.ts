@@ -27,23 +27,24 @@ export const main = (): Express => {
     res.status(200).send(true);
   });
 
-  app.get("/models", authenticateToken, async (req, res) => {
+  app.get("/assistants", authenticateToken, async (req, res) => {
     const ai = OpenAIClient.Instance;
-    const models = await ai.listModels();
-    res.status(200).send(models);
+    const threads = await ai.listAssistants();
+    res.status(200).send(threads);
   });
 
-  app.get("/conversations/:conversationId/history", authenticateToken, async (req, res) => {
+  app.get("/threads/:threadId", authenticateToken, async (req, res) => {
     const ai = OpenAIClient.Instance;
-    const conversationId = req.params.conversationId;
-    const history = ai.getConversationHistory(conversationId);
-    res.status(200).send(history);
+    const threadId = req.params.threadId;
+    const thread = await ai.findThread(threadId);
+    res.status(200).send(thread);
   });
 
-  app.post("/conversations", authenticateToken, async (req, res) => {
+  app.get("/threads/:threadId/runs", authenticateToken, async (req, res) => {
     const ai = OpenAIClient.Instance;
-    const conversationId = ai.createConversation();
-    res.status(201).send({ conversationId });
+    const threadId = req.params.threadId;
+    const runs = await ai.listRuns(threadId);
+    res.status(200).send(runs);
   });
 
   return app;
