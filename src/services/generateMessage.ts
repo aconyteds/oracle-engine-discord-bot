@@ -46,8 +46,12 @@ const generateMessage = async ({
 
     // Generate a response from the AI
     // Use assistantId as model selector
-    const model = assistantId.startsWith('gpt-') ? assistantId : 'gpt-3.5-turbo';
-    const aiResponseObj = await ai.generateMessage(conversationId, prompt, model);
+    const model = assistantId.startsWith("gpt-") ? assistantId : "gpt-4.1-nano";
+    const aiResponseObj = await ai.generateMessage(
+      conversationId,
+      prompt,
+      model
+    );
     let aiResponse = aiResponseObj.content;
 
     // Discord message length limit is 2000 characters, force the string length

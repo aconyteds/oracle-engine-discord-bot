@@ -67,7 +67,9 @@ export class OpenAIClient {
    * @returns The ID of the created conversation.
    */
   public createConversation = (): string => {
-    const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const conversationId = `conv_${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(2, 11)}`;
     this.conversationHistory.set(conversationId, []);
     return conversationId;
   };
@@ -75,17 +77,22 @@ export class OpenAIClient {
   /**
    * Creates a conversation and generates an initial response.
    * @param prompt - The initial prompt.
-   * @param model - The model to use (defaults to gpt-3.5-turbo).
+   * @param model - The model to use (defaults to gpt-4.1-nano).
    * @param systemPrompt - Optional system prompt.
    * @returns A promise that resolves to a ChatResponse object containing the conversation ID and response.
    */
   public createAndRunConversation = async (
     prompt: string,
-    model: string = "gpt-3.5-turbo",
+    model: string = "gpt-4.1-nano",
     systemPrompt?: string
   ): Promise<{ conversationId: string; response: ChatResponse }> => {
     const conversationId = this.createConversation();
-    const response = await this.generateMessage(conversationId, prompt, model, systemPrompt);
+    const response = await this.generateMessage(
+      conversationId,
+      prompt,
+      model,
+      systemPrompt
+    );
     return {
       conversationId,
       response,
@@ -98,10 +105,7 @@ export class OpenAIClient {
    * @param conversationId - The ID of the conversation.
    * @param message - The message to add.
    */
-  public addMessage = (
-    conversationId: string,
-    message: ChatMessage
-  ): void => {
+  public addMessage = (conversationId: string, message: ChatMessage): void => {
     const history = this.conversationHistory.get(conversationId) || [];
     history.push(message);
     this.conversationHistory.set(conversationId, history);
@@ -112,30 +116,30 @@ export class OpenAIClient {
    *
    * @param conversationId - The ID of the conversation.
    * @param prompt - The user prompt.
-   * @param model - The model to use (defaults to gpt-3.5-turbo).
+   * @param model - The model to use (defaults to gpt-4.1-nano).
    * @param systemPrompt - Optional system prompt.
    * @returns A Promise that resolves to the generated response.
    */
   public generateMessage = async (
     conversationId: string,
     prompt: string,
-    model: string = "gpt-3.5-turbo",
+    model: string = "gpt-4.1-nano",
     systemPrompt?: string
   ): Promise<ChatResponse> => {
     const history = this.conversationHistory.get(conversationId) || [];
-    
+
     // Add user message to history
     const userMessage: ChatMessage = { role: "user", content: prompt };
     this.addMessage(conversationId, userMessage);
 
     // Build messages array for API call
     const messages: ChatMessage[] = [];
-    
+
     // Add system prompt if provided
     if (systemPrompt) {
       messages.push({ role: "system", content: systemPrompt });
     }
-    
+
     // Add conversation history
     messages.push(...history);
 
@@ -148,9 +152,12 @@ export class OpenAIClient {
 
       const assistantMessage = response.choices[0]?.message?.content || "";
       const messageId = response.id;
-      
+
       // Add assistant response to history
-      const assistantChatMessage: ChatMessage = { role: "assistant", content: assistantMessage };
+      const assistantChatMessage: ChatMessage = {
+        role: "assistant",
+        content: assistantMessage,
+      };
       this.addMessage(conversationId, assistantChatMessage);
 
       return {
