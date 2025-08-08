@@ -25,27 +25,34 @@ const generateMessage = async ({
   const thinkingMessage = await message.reply({
     content: "🤔 Let me think about that...",
   });
-  let threadId;
+  let conversationId;
 
   try {
     if (originalMessageId) {
       try {
-        threadId = await db.getMessageThreadID(originalMessageId);
+        conversationId = await db.getMessageThreadID(originalMessageId);
       } catch (error) {
-        console.warn("unable to get thread ID from DB:", error);
+        console.warn("unable to get conversation ID from DB:", error);
       }
     }
-    if (!threadId) {
-      // Create a new thread for the assistant
-      threadId = await ai.createThread();
+    if (!conversationId) {
+      // Create a new conversation
+      conversationId = ai.createConversation();
     }
     // Store the Original Message
-    await db.storeThread(message, threadId);
+    await db.storeThread(message, conversationId);
     // Store the "thinking" message
-    await db.storeThread(thinkingMessage, threadId);
+    await db.storeThread(thinkingMessage, conversationId);
 
     // Generate a response from the AI
-    let aiResponse = await ai.generateMessage(threadId, assistantId, prompt);
+    // Use assistantId as model selector
+    const model = assistantId.startsWith("gpt-") ? assistantId : "gpt-4.1-nano";
+    const aiResponseObj = await ai.generateMessage(
+      conversationId,
+      prompt,
+      model
+    );
+    let aiResponse = aiResponseObj.content;
 
     // Discord message length limit is 2000 characters, force the string length
     const stringLength = aiResponse.length;
@@ -59,13 +66,13 @@ const generateMessage = async ({
       content: aiResponse.substring(0, 2000),
     });
     // Store the Final Message ID
-    await db.storeThread(finalMessage, threadId);
+    await db.storeThread(finalMessage, conversationId);
   } catch (error) {
     console.error("Error generating AI response:", error);
     const errorUpdate = await thinkingMessage.edit({
       content: "Sorry, I couldn't come up with a response.",
     });
-    await db.storeThread(errorUpdate, threadId);
+    await db.storeThread(errorUpdate, conversationId);
   }
 };
 
