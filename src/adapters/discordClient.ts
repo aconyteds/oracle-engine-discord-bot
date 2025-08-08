@@ -81,7 +81,9 @@ export class DiscordClient {
   // This is the most important method in this class. It handles all incoming messages from the gateway, and routes them to the proper handlers.
   private handleMessage = async (message: Message) => {
     if (message.content === "!ping") {
-      message.channel.send("Pong!");
+      if ("send" in message.channel) {
+        message.channel.send("Pong!");
+      }
       return;
     }
     const { author, mentions, channelId, guild, guildId } = message;
