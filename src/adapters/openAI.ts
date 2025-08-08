@@ -1,13 +1,9 @@
 import { ClientOptions, OpenAI } from "openai";
+import { AssistantsPage } from "openai/resources/beta/assistants";
 
-type ChatMessage = {
-  role: "user" | "assistant" | "system";
-  content: string;
-};
-
-type ChatResponse = {
-  messageId: string;
-  content: string;
+type CreateThreadPayload = {
+  threadId: string;
+  runId: string;
 };
 
 /**
@@ -37,136 +33,129 @@ export class OpenAIClient {
   }
 
   /**
-   * Retrieves available models from OpenAI.
+   * Retrieves a list of assistants associated with the API key.
    *
-   * @returns {Promise<OpenAI.Models.ModelsPage>} A promise that resolves to available models.
+   * @returns {Promise<AssistantsPage>} A promise that resolves to an AssistantsPage object containing the list of assistants.
    */
-  public listModels = async (): Promise<OpenAI.Models.ModelsPage> => {
-    console.log("Listing available models");
-    const response = await this._ai.models.list();
+  public listAssistants = async (): Promise<AssistantsPage> => {
+    console.log("Listing assistants associated with the API key");
+    const response = await this._ai.beta.assistants.list({
+      order: "desc",
+      limit: 20,
+    });
     return response;
   };
 
   /**
-   * Stores conversation history in memory (simple in-memory storage).
-   */
-  private conversationHistory: Map<string, ChatMessage[]> = new Map();
-
-  /**
-   * Gets conversation history for a given conversation ID.
+   * Finds a thread by its ID.
    *
-   * @param conversationId - The ID of the conversation.
-   * @returns The conversation history.
+   * @param threadId - The ID of the thread to find.
+   * @returns A promise that resolves to the retrieved thread.
    */
-  public getConversationHistory = (conversationId: string): ChatMessage[] => {
-    return this.conversationHistory.get(conversationId) || [];
+  public findThread = async (
+    threadId: string
+  ): Promise<OpenAI.Beta.Threads.Thread> => {
+    console.log(`Finding thread: ${threadId}`);
+    const response = await this._ai.beta.threads.retrieve(threadId);
+    return response;
   };
 
   /**
-   * Creates a new conversation.
-   * @returns The ID of the created conversation.
+   * Retrieves a list of runs for a given thread.
+   *
+   * @param threadId - The ID of the thread.
+   * @returns A Promise that resolves to a RunsPage object containing the list of runs.
    */
-  public createConversation = (): string => {
-    const conversationId = `conv_${Date.now()}_${Math.random()
-      .toString(36)
-      .substring(2, 11)}`;
-    this.conversationHistory.set(conversationId, []);
-    return conversationId;
+  public listRuns = async (
+    threadId: string
+  ): Promise<OpenAI.Beta.Threads.Runs.RunsPage> => {
+    console.log(`Listing runs for thread: ${threadId}`);
+    const response = await this._ai.beta.threads.runs.list(threadId);
+    return response;
   };
 
   /**
-   * Creates a conversation and generates an initial response.
-   * @param prompt - The initial prompt.
-   * @param model - The model to use (defaults to gpt-4.1-nano).
-   * @param systemPrompt - Optional system prompt.
-   * @returns A promise that resolves to a ChatResponse object containing the conversation ID and response.
+   * Creates a thread.
+   * @returns The ID of the created thread.
    */
-  public createAndRunConversation = async (
+  public createThread = async (): Promise<string> => {
+    const response = await this._ai.beta.threads.create();
+    return response.id;
+  };
+
+  /**
+   * Creates and runs a thread in the OpenAI assistant.
+   * @param prompt - The prompt for the thread.
+   * @returns A promise that resolves to a CreateThreadPayload object containing the thread ID and run ID.
+   */
+  public createAndRunThread = async (
     prompt: string,
-    model: string = "gpt-4.1-nano",
-    systemPrompt?: string
-  ): Promise<{ conversationId: string; response: ChatResponse }> => {
-    const conversationId = this.createConversation();
-    const response = await this.generateMessage(
-      conversationId,
-      prompt,
-      model,
-      systemPrompt
-    );
+    assistant_id: string
+  ): Promise<CreateThreadPayload> => {
+    const response = await this._ai.beta.threads.createAndRun({
+      assistant_id,
+      thread: {
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      },
+    });
     return {
-      conversationId,
-      response,
+      threadId: response.thread_id,
+      runId: response.id,
     };
   };
 
   /**
-   * Adds a message to a conversation.
+   * Adds a message to a thread.
    *
-   * @param conversationId - The ID of the conversation.
-   * @param message - The message to add.
+   * @param threadId - The ID of the thread.
+   * @param prompt - The content of the message.
+   * @returns A promise that resolves when the message is added.
    */
-  public addMessage = (conversationId: string, message: ChatMessage): void => {
-    const history = this.conversationHistory.get(conversationId) || [];
-    history.push(message);
-    this.conversationHistory.set(conversationId, history);
+  public addMessage = async (
+    threadId: string,
+    prompt: string
+  ): Promise<void> => {
+    await this._ai.beta.threads.messages.create(threadId, {
+      role: "user",
+      content: prompt,
+    });
   };
 
   /**
-   * Generates a message using the OpenAI Chat Completions API.
+   * Generates a message using the OpenAI API.
    *
-   * @param conversationId - The ID of the conversation.
-   * @param prompt - The user prompt.
-   * @param model - The model to use (defaults to gpt-4.1-nano).
-   * @param systemPrompt - Optional system prompt.
-   * @returns A Promise that resolves to the generated response.
+   * @param threadId - The ID of the thread.
+   * @param prompt - The optional prompt for the message.
+   * @returns A Promise that resolves to the generated message.
    */
   public generateMessage = async (
-    conversationId: string,
-    prompt: string,
-    model: string = "gpt-4.1-nano",
-    systemPrompt?: string
-  ): Promise<ChatResponse> => {
-    const history = this.conversationHistory.get(conversationId) || [];
+    threadId: string,
+    assistant_id: string,
+    prompt?: string
+  ): Promise<string> => {
+    let response = "";
+    const run = await this._ai.beta.threads.runs.createAndPoll(threadId, {
+      assistant_id,
+      stream: false,
+      additional_messages: prompt ? [{ role: "user", content: prompt }] : [],
+    });
 
-    // Add user message to history
-    const userMessage: ChatMessage = { role: "user", content: prompt };
-    this.addMessage(conversationId, userMessage);
-
-    // Build messages array for API call
-    const messages: ChatMessage[] = [];
-
-    // Add system prompt if provided
-    if (systemPrompt) {
-      messages.push({ role: "system", content: systemPrompt });
+    if (run.status === "completed") {
+      const messages = await this._ai.beta.threads.messages.list(run.thread_id);
+      const messageList = messages.data;
+      const latestMessage = messageList[0].content[0];
+      if (latestMessage.type === "text") {
+        response = latestMessage.text.value;
+      }
+    } else {
+      console.log(run.status);
     }
 
-    // Add conversation history
-    messages.push(...history);
-
-    try {
-      const response = await this._ai.chat.completions.create({
-        model,
-        messages,
-        stream: false,
-      });
-
-      const assistantMessage = response.choices[0]?.message?.content || "";
-      const messageId = response.id;
-
-      // Add assistant response to history
-      const assistantChatMessage: ChatMessage = {
-        role: "assistant",
-        content: assistantMessage,
-      };
-      this.addMessage(conversationId, assistantChatMessage);
-
-      return {
-        messageId,
-        content: assistantMessage,
-      };
-    } catch (error) {
-      console.error("Error generating message:", error);
-      throw error;
-    }
+    return response;
   };
 }
